@@ -2,5 +2,5 @@ audio_files/
 transcripts/
 summaries/
 .env
-note-env # Virtual environment directory
+note-env/ # Virtual environment directory
 __pycache__/
