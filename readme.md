@@ -67,7 +67,7 @@ This script will:
 Once setup is complete:
 
 ```bash
-cd meeting_note_mate_v3
+cd meeting_note_mate
 source note-env/bin/activate
 python gui_app.py
 ```
