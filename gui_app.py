@@ -33,6 +33,10 @@ class MeetingNoteMateApp:
         tb.Button(controls_frame, text="📁 Use Saved Audio", bootstyle=INFO, command=self.use_existing_audio).pack(side=LEFT, padx=5)
         tb.Button(controls_frame, text="🔑 Change API Key", bootstyle=SECONDARY, command=self.change_api_key).pack(side=LEFT, padx=5)
 
+        # Status indicator label
+        self.status_label = tb.Label(main_frame, text="", font=("Helvetica", 14, "italic"), bootstyle=INFO)
+        self.status_label.pack(pady=10)
+
         # Provider and prompt
         config_frame = tb.Labelframe(main_frame, text="Settings", padding=15)
         config_frame.pack(fill=X, pady=10)
@@ -53,13 +57,24 @@ class MeetingNoteMateApp:
         self.output_box.pack(fill=BOTH, expand=True)
 
     def start_recording(self):
-        start_recording()
+        try:
+            # Update UI status
+            self.status_label.config(text="🎙️ Recording... Speak now!", bootstyle=SUCCESS)
+            self.root.update_idletasks()
+            start_recording()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def stop_and_process(self):
         try:
+            self.status_label.config(text="⏳ Processing audio...", bootstyle=WARNING)
+            self.root.update_idletasks()
             audio_path = stop_recording()
+            self.status_label.config(text="") 
+
             self._process_audio(audio_path)
         except Exception as e:
+            self.status_label.config(text="")
             messagebox.showerror("Error", str(e))
 
     def use_existing_audio(self):
