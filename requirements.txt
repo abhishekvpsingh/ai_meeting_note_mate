@@ -1,7 +1,24 @@
-sounddevice==0.4.6
-scipy
-openai
-faster-whisper==0.10.0
-pydub
+# === Core Framework ===
+ttkbootstrap==1.10.1
 python-dotenv==1.0.1
-ttkbootstrap
+sounddevice==0.4.6
+numpy==1.26.4
+scipy==1.12.0
+requests==2.32.3
+markdown==3.7
+Pillow==10.3.0
+tqdm==4.67.1
+
+# === LLM / OpenAI API ===
+openai==1.47.1
+httpx==0.27.0
+httpcore==1.0.5
+
+# === Audio / Transcription Stack ===
+av==12.0.0
+faster-whisper==1.0.1
+ctranslate2==4.6.0
+onnxruntime==1.23.2
+tokenizers==0.15.2
+huggingface-hub==0.36.0
+pyyaml>=6.0
