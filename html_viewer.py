@@ -1,6 +1,26 @@
 # html_viewer.py
 import tempfile
 import webbrowser
+import json
+
+def normalize_summary_to_markdown(summary_text: str) -> str:
+    """Convert JSON or plain text summary into readable markdown."""
+    try:
+        data = json.loads(summary_text)
+        md = []
+        for section, content in data.items():
+            md.append(f"## {section}")
+            if isinstance(content, dict):
+                for k,v in content.items():
+                    md.append(f"- **{k}**: {v}")
+            elif isinstance(content, list):
+                for item in content:
+                    md.append(f"- {item}")
+            else:
+                md.append(str(content))
+        return "\n".join(md)
+    except Exception:
+        return summary_text
 
 def _try_markdown_to_html(md_text: str) -> str:
     """

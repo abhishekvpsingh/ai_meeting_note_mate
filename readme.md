@@ -1,127 +1,155 @@
-
-```markdown
 # Meeting Note Mate
 
-**Meeting Note Mate** is a local Mac-based AI-powered application that records audio, transcribes it using Whisper, and summarizes the transcript into structured meeting notes (MoM). It comes with a modern GUI built using `ttkbootstrap` and supports both **OpenAI** and **Ollama (LLaMA)** as LLM backends.
+Meeting Note Mate is a macOS-first desktop assistant that captures meetings, transcribes the audio with Faster-Whisper, and turns the conversation into structured notes you can share immediately. The app ships with a modern `ttkbootstrap` UI, works with either OpenAI or a local Ollama model, and keeps your recordings, transcripts, and summaries organized for later review.
 
 ---
 
-## Features
-
-- 🎤 Record meeting audio from mic
-- 📁 Load existing `.wav` files
-- 🧠 Transcribe audio using `faster-whisper`
-- ✨ Summarize transcripts using LLMs (OpenAI or Ollama)
-- 🖥️ GUI built with `Tkinter + ttkbootstrap`
-- 🔐 API key management and provider switch (OpenAI or Ollama)
-- 📂 Saves transcripts and summaries automatically
-- 💻 Works fully offline with Ollama
-
----
-
-## Project Structure
-
-```
-
-meeting\_note\_mate\_v3/
-├── audio\_files/       # Recorded audio (.wav)
-├── transcripts/       # Saved transcripts
-├── summaries/         # Summarized notes
-├── record\_audio.py
-├── transcribe\_audio.py
-├── summarize\_notes.py
-├── gui\_app.py         # Main app GUI
-├── requirements.txt
-├── setup\_project.sh   # ⬅️ One-step setup script
-└── .env               # (created on first use if OpenAI selected)
-
-````
-
----
-
-## ⚙️ Setup Instructions
-
-### Step 1: Run the setup script
-
-Make sure you have **Python 3.8+** installed (preferably via `python.org` or `brew`, not Anaconda).
-
-In your terminal:
-
-```bash
-curl -O https://raw.githubusercontent.com/your-repo/meeting_note_mate_v3/main/setup_project.sh
-chmod +x setup_project.sh
-./setup_project.sh
-````
-
-This script will:
-
-* Create the project folder
-* Set up a virtual environment
-* Install required packages
-* Generate the source code and GUI
-
----
-
-## How to Run the App
-
-Once setup is complete:
-
-```bash
-cd meeting_note_mate
-source note-env/bin/activate
-python gui_app.py
-```
-
----
-
-## Supported LLM Providers
-
-### OpenAI
-
-* Requires an OpenAI API key
-* You'll be prompted to enter it once and it will be saved to `.env`
-
-### Ollama (local model)
-
-* Must have [Ollama](https://ollama.com) running locally
-* No API key required
-* Recommended model: `llama3` or `mistral`
+## Key Features
+- 🎙️ One-click start/stop audio recording with live status indicators.
+- 🧠 Accurate local transcription powered by `faster-whisper`.
+- ✨ AI-generated notes with customizable prompts (OpenAI or Ollama backend).
+- 📂 Automatic archival of audio, transcripts, summaries, and team reports.
+- 👥 Team-progress dashboards, member management, and searchable summary history.
+- 💾 macOS app bundle and DMG packaging via PyInstaller for easy distribution.
 
 ---
 
 ## Requirements
+- macOS (tested on Sonoma) with microphone access granted.
+- Python 3.12 (other 3.10+ versions may work but are untested).
+- Xcode Command Line Tools (`xcode-select --install`) for audio and PyInstaller tooling.
+- OpenAI API key **or** a running [Ollama](https://ollama.com) instance on `http://localhost:11434`.
 
-* `Python 3.8+`
-* `faster-whisper`
-* `openai`
-* `sounddevice`, `scipy`, `pydub`
-* `python-dotenv`
-* `ttkbootstrap`
-* Optional: `ollama` running locally
-
-> All dependencies are auto-installed during the setup.
+All Python dependencies are listed in `requirements.txt`. Large model weights (Faster-Whisper) download on first run, so make sure you have a stable connection the first time you transcribe.
 
 ---
 
-## Customization
+## Quick Start
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/<your-org>/meeting_note_mate_v3.git
+   cd meeting_note_mate_v3
+   ```
 
-* You can edit `summarize_notes.py` to change the summarization prompt.
-* Transcripts and summaries are saved with timestamps for easy tracking.
+2. **Create the virtual environment** (choose one):
+
+   - Automated setup (recommended):
+     ```bash
+     chmod +x setup_venv.sh
+     ./setup_venv.sh
+     ```
+     The script creates `note-env`, installs pinned dependencies, and verifies the stack.
+
+   - Manual setup:
+     ```bash
+     python3.12 -m venv note-env
+     source note-env/bin/activate
+     pip install --upgrade pip
+     pip install -r requirements.txt
+     ```
+
+3. **Configure API access (if using OpenAI)**
+   - Create a `.env` file next to `gui_app.py` with `OPENAI_API_KEY=sk-...`, or
+   - Use the in-app “Change API Key” button the first time you pick OpenAI; the key is persisted automatically.
 
 ---
 
-## Notes
-
-* Audio is saved in `audio_files/`
-* Transcripts in `transcripts/`
-* Summaries in `summaries/`
-* You can record new audio or use an existing `.wav` file.
-
----
-
-
-## Questions or Help?
-
-Feel free to open an issue or message me directly for support.
-
+## Run the Desktop App
+Activate the virtual environment and start the GUI:
+```bash
+source note-env/bin/activate   # or ./note-env/Scripts/activate on Windows (if supported)
+python gui_app.py
 ```
+
+On macOS you can also use the helper script:
+```bash
+./run_app.sh
+```
+
+The main window provides:
+- **Start Recording** – begins a live capture to `~/MeetingNoteMateData/audio_files/`.
+- **Stop & Transcribe** – ends the current recording, runs Faster-Whisper, and generates AI notes.
+- **Use Saved Audio** – pick an existing `.wav` file for transcription.
+- **Last 30 Days Summary** – aggregates recent summaries into a team dashboard.
+- **Manage Team Members** – maintain the roster used in progress reports.
+- **View Past Summaries** – search and reopen prior team summaries in a browser.
+- **Change API Key / Switch Provider** – toggle between OpenAI and Ollama on the fly.
+
+Generated notes appear in the right-hand panel and are written to disk with timestamps.
+
+---
+
+## LLM Providers
+- **OpenAI** – Uses the `gpt-4o` model through the official API client. Requires an API key in `.env`. The app prompts you once if the key is missing.
+- **Ollama** – Talks to a locally running Ollama server using the OpenAI-compatible endpoint. Ensure `ollama serve` is running and that a model like `llama3` is pulled (`ollama pull llama3`) before selecting this provider.
+
+You can tailor the summarization prompt in the “Custom Prompt” field for either backend.
+
+---
+
+## Data & Storage
+Meeting Note Mate keeps persistent data under `~/MeetingNoteMateData/`:
+- `audio_files/` – raw `.wav` recordings created by the app.
+- `transcripts/` – plain-text transcripts saved after each transcription.
+- `summaries/` – AI-generated meeting notes.
+- `team_summaries/` – Markdown reports generated by the team-progress feature.
+- `team_members.json` – editable list maintained through the GUI.
+- `projects.json` – optional list of project names for the project selector.
+
+These directories are created on first use and can be backed up or versioned independently.
+
+---
+
+## Building the macOS App Bundle
+PyInstaller is used to package the app into a standalone `.app` and DMG:
+```bash
+chmod +x build_mac_app.sh
+./build_mac_app.sh
+```
+
+The script:
+1. Activates `note-env` and reinstalls build-time dependencies (PyInstaller plus audio libs).
+2. Cleans previous `build/` and `dist/` outputs.
+3. Generates `dist/Meeting Note Mate.app`.
+4. Creates a distributable DMG at `release/Meeting-Note-Mate.dmg` with `hdiutil`.
+
+Prerequisites: the virtual environment must exist, and you may need the FFmpeg runtime available via Homebrew (`brew install ffmpeg`) when working with certain audio formats.
+
+---
+
+## Project Layout
+```
+meeting_note_mate_v3/
+├── gui_app.py               # ttkbootstrap GUI entry point
+├── record_audio.py          # microphone capture helpers
+├── transcribe_audio.py      # Faster-Whisper integration
+├── summarize_notes.py       # transcript summarization logic
+├── summarize_team_progress.py
+├── team_members.py          # simple JSON persistence layer
+├── path_utils.py            # PyInstaller-aware filesystem helpers
+├── requirements.txt
+├── setup_venv.sh            # reproducible environment bootstrap
+├── run_app.sh               # convenient launcher
+├── build_mac_app.sh         # PyInstaller + DMG pipeline
+└── Meeting Note Mate.spec   # PyInstaller spec file
+```
+
+Additional folders (`audio_files/`, `summaries/`, `transcripts/`, `dist/`, `release/`, etc.) are created as part of normal usage and builds.
+
+---
+
+## Troubleshooting
+- **Microphone access denied** – open `System Settings → Privacy & Security → Microphone` and allow access for Terminal/Python.
+- **Ollama connection errors** – confirm `ollama serve` is running and reachable at `http://localhost:11434/v1`. Adjust firewall rules if needed.
+- **Faster-Whisper download stalls** – the first transcription fetches model weights (~300 MB–1 GB). Retry on a stable connection.
+- **PyInstaller build warnings** – review `build/Meeting Note Mate/warn-Meeting Note Mate.txt` for missing libraries. Install the suggested Homebrew packages and rebuild.
+- **Virtual environment issues** – remove `note-env/` and rerun `setup_venv.sh` to recreate the environment from scratch.
+
+---
+
+## Contributing
+Bug reports, feature ideas, and pull requests are welcome. If you add new modules that need to be bundled, update `Meeting Note Mate.spec` and the README accordingly.
+
+---
+
+Enjoy faster meeting follow-ups with Meeting Note Mate!

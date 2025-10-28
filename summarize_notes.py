@@ -30,30 +30,47 @@ def _build_meeting_prompt(transcript: str, project_name: str, custom_instruction
     bg_lines = [f"- {k}: {v}" for k, v in background.items()]
     background_section = "\n".join(bg_lines) if bg_lines else "N/A"
 
-    instruction = custom_instruction.strip() if custom_instruction else (
-        "Summarize this meeting like a crisp daily standup note with sections for:"
-        "\n- Key Updates per person (use ONLY the team members list; if not mentioned, label as 'Unattributed')"
-        "\n- JIRA Tickets mentioned (keep exact IDs like ER-1234, RTWDATA-4567)"
-        "\n- Blockers / Risks"
-        "\n- Decisions"
-        "\n- Action Items (owner & due date if mentioned)\n"
-        "Be faithful to the transcript; do not invent names, tickets or facts."
+    # ---- Strong default instruction ----
+    instruction = (
+        custom_instruction.strip()
+        if custom_instruction
+        else (
+            "You are a senior project analyst summarizing a team meeting for project leadership.\n"
+            "Your goal is to produce a highly structured and faithful summary with the following sections:\n\n"
+            "1. **Meeting Overview** – Context, main theme, and objective of discussion.\n"
+            "2. **Detailed Team Member Updates** – For each person in the known team list below:\n"
+            "     - Identify their spoken parts and summarize their work updates, blockers, and next actions.\n"
+            "     - Include all JIRA or ticket numbers they mention (like RTWDATA-1234, ER-5678) under their section.\n"
+            "     - If they are not mentioned, list them as '(No update shared)'.\n"
+            "     - Keep summaries descriptive (3–5 lines per person if possible).\n"
+            "3. **JIRA / Ticket Summary** – Group all ticket IDs mentioned and summarize current progress, blockers, or ownership per ticket.\n"
+            "4. **Decisions Made** – Explicit decisions or agreements noted during the call.\n"
+            "5. **Risks / Blockers** – Technical or resource issues raised.\n"
+            "6. **Action Items** – Concrete next steps, with owners and due dates if discussed.\n\n"
+            "Guidelines:\n"
+            "- Extract factual details only. Avoid speculation.\n"
+            "- Retain all numeric IDs (tickets, story numbers, release identifiers).\n"
+            "- Be concise but detailed; this summary should be readable as an internal status report.\n"
+            "- Use markdown formatting and bullet lists for readability."
+        )
     )
 
     prompt = f"""
-                You are an expert technical PM assistant for the {project_name} project.
-                Use this known team and background to attribute updates:
+                You are an expert technical project assistant summarizing a meeting for the **{project_name}** project.
 
-                Team Members: {team_section}
-                Team Background:
+                Known Team Members:
+                {team_section}
+
+                Project / Technical Background:
                 {background_section}
 
-                Now read the meeting transcript and produce a structured summary.
+                Meeting Transcript:
+                \"\"\"{transcript}\"\"\"
+
                 {instruction}
 
-                Transcript:
-                {transcript}
-            """
+                Ensure your response follows the exact section order above and uses markdown.
+                """ 
     return prompt
 
 def summarize_text(
@@ -69,10 +86,13 @@ def summarize_text(
     logger = get_logger(project_name)
     team = load_team_members(project_name)
     background = load_background(project_name)
+    
+    # Clean transcript (remove noise, normalize spaces)
+    transcript = transcript.replace("  ", " ").replace("\n\n", "\n").strip()
 
     prompt = _build_meeting_prompt(transcript, project_name, user_prompt, team, background)
     logger.info("Summarizing with provider=%s model=%s (team=%d, bg=%d)", provider, model_name, len(team), len(background))
-    logger.debug("Prompt:\n%s", prompt)
+    logger.info("Prompt:\n%s", prompt)
 
     client = _openai_client(provider)
 
@@ -83,7 +103,7 @@ def summarize_text(
         resp = client.chat.completions.create(
             model=model_to_use,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
+            temperature=0.25,
         )
         result = resp.choices[0].message.content
     else:
@@ -96,7 +116,7 @@ def summarize_text(
         resp = openai.chat.completions.create(
             model=model_to_use,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
+            temperature=0.25,
         )
         result = resp.choices[0].message.content
 
