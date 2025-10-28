@@ -27,7 +27,7 @@ All Python dependencies are listed in `requirements.txt`. Large model weights (F
 ## Quick Start
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/<your-org>/meeting_note_mate_v3.git
+   git clone https://github.com/abhishekvpsingh/ai_meeting_note_mate.git
    cd meeting_note_mate_v3
    ```
 
